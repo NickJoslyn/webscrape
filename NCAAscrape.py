@@ -12,10 +12,16 @@ html_soup = BeautifulSoup(response.text, 'html.parser')
 
 team_containers = html_soup.find_all('div', class_ = 'css-panes')
 
-print(type(team_containers))
-print(len(team_containers))
+#print(type(team_containers))
+#print(len(team_containers))
 
-print(team_containers)
+#print(team_containers)
+
+team_container = team_containers[0]
+
+print(team_container.td.a.text)
 
 
+team_table = team_containers.find_all('td', valign_ = 'top')
 
+print(team_table)
