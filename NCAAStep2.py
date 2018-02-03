@@ -1,5 +1,5 @@
 ## Use list of schools/urls from Step 1 to grab statistics
-
+import pandas as pd
 from requests import get
 from bs4 import BeautifulSoup
 
@@ -8,6 +8,8 @@ response = get(url)
 
 html_soup = BeautifulSoup(response.text, 'html.parser')
 team_container = html_soup.find('div', id = 'contentarea')
+
+teamName = team_container.fieldset.legend.a.text
 
 #------------Schedule and Results Information--------------------
 
@@ -29,6 +31,9 @@ for match in matchInformation:
     else:
         result.append(match.find('a').text)
         counter = 0
+
+#Combine into one array - All have the same dimensions
+seasonMatchInformation = [date, opponent, result]
 
 #------------Team Statistical Information--------------------
 
@@ -54,3 +59,14 @@ for stat in statInformation:
     else:
         value.append(float(stat.text))
     statCounter += 1
+
+#Combine into one array - All have the same dimensions
+seasonStatInformation = [statType, ranking, value]
+
+#------------Put Together in a data frame--------------------
+
+singleTeamDF = pd.DataFrame({'A': teamName,
+                            'B': [seasonMatchInformation],
+                            'C': [seasonStatInformation]})
+
+print(singleTeamDF)
