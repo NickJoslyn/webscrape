@@ -3,70 +3,117 @@ import pandas as pd
 from requests import get
 from bs4 import BeautifulSoup
 
-url = 'http://stats.ncaa.org/team/721/12621'
-response = get(url)
+def grabStats(url):
 
-html_soup = BeautifulSoup(response.text, 'html.parser')
-team_container = html_soup.find('div', id = 'contentarea')
+    if (url == "N/A"):
+        print("No URL available")
+        return pd.DataFrame({'A': [], 'B': [], 'C': []})
 
-teamName = team_container.fieldset.legend.a.text
-
-#------------Schedule and Results Information--------------------
-
-scheduleTable = team_container.find_all('td', width = "50%")[0]
-date = []
-opponent = []
-result = []
-
-matchInformation = scheduleTable.find_all('td', class_ = "smtext")
-counter = 0
-
-for match in matchInformation:
-    if (counter == 0):
-        date.append(match.text)
-        counter += 1
-    elif (counter == 1):
-        opponent.append(match.find('a').text)
-        counter += 1
     else:
-        result.append(match.find('a').text)
+        url = "http://stats.ncaa.org" + url
+        response = get(url)
+
+        html_soup = BeautifulSoup(response.text, 'html.parser')
+        team_container = html_soup.find('div', id = 'contentarea')
+
+        try:
+            teamName = team_container.fieldset.legend.a.text
+        except:
+            print("Couldn't find team name")
+            teamName = "N/A"
+        #------------Schedule and Results Information--------------------
+
+        try:
+            scheduleTable = team_container.find_all('td', width = "50%")[0]
+        except:
+            print("Couldn't find schedule of " + str(teamName))
+            return pd.DataFrame({'A': teamName, 'B': [], 'C': []})
+
+        date = []
+        opponent = []
+        result = []
+
+        try:
+            matchInformation = scheduleTable.find_all('td', class_ = "smtext")
+        except:
+            print("Couldn't find match information of " + str(teamName))
+            return pd.DataFrame({'A': teamName, 'B': [], 'C': []})
+
         counter = 0
 
-#Combine into one array - All have the same dimensions
-seasonMatchInformation = [date, opponent, result]
+        for match in matchInformation:
+            if (counter == 0):
+                try:
+                    date.append(match.text)
+                except:
+                    print("Couldn't find date")
+                    date.append("N/A")
+                counter += 1
+            elif (counter == 1):
+                try:
+                    opponent.append(match.find('a').text)
+                except:
+                    print("Couldn't find opponent")
+                    opponent.append("N/A")
+                counter += 1
+            else:
+                try:
+                    result.append(match.find('a').text)
+                except:
+                    print("Couldn't find result")
+                    result.append("N/A")
+                counter = 0
 
-#------------Team Statistical Information--------------------
+        #Combine into one array - All have the same dimensions
+        seasonMatchInformation = [date, opponent, result]
 
-statsTable = team_container.find_all('td', width = "50%")[1]
+        #------------Team Statistical Information--------------------
 
-categories = statsTable.find_all('a')
-statType = []
+        try:
+            statsTable = team_container.find_all('td', width = "50%")[1]
+        except:
+            print("Couldn't find stats of " + str(teamName))
+            return pd.DataFrame({'A': teamName, 'B': [], 'C': []})
 
-for category in categories:
-    statType.append(category.text)
+        categories = statsTable.find_all('a')
+        statType = []
 
-#Last element is "view complete ranking summary" which can be deleted
-statType = statType[:-1]
+        for category in categories:
+            try:
+                statType.append(category.text)
+            except:
+                print("Couldn't find stat category")
+                statType.append("N/A")
+        #Last element is "view complete ranking summary" which can be deleted
+        statType = statType[:-1]
 
-statInformation = statsTable.find_all('td', align = "right")
-ranking = []
-value = []
-statCounter = 0
+        statInformation = statsTable.find_all('td', align = "right")
+        ranking = []
+        value = []
+        statCounter = 0
 
-for stat in statInformation:
-    if (statCounter%2 == 0):
-        ranking.append(stat.text)
-    else:
-        value.append(float(stat.text))
-    statCounter += 1
+        for stat in statInformation:
+            if (statCounter%2 == 0):
+                try:
+                    ranking.append(stat.text)
+                except:
+                    print("Couldn't find ranking")
+                    ranking.append("N/A")
+            else:
+                try:
+                    value.append(float(stat.text))
+                except:
+                    print("Couldn't find value")
+                    value.append("N/A")
+            statCounter += 1
 
-#Combine into one array - All have the same dimensions
-seasonStatInformation = [statType, ranking, value]
+        #Combine into one array - All have the same dimensions
+        seasonStatInformation = [statType, ranking, value]
 
-#------------Put Together in a data frame--------------------
+        #------------Put Together in a data frame--------------------
 
-singleTeamDF = pd.DataFrame({'A': teamName,
-                            'B': [seasonMatchInformation],
-                            'C': [seasonStatInformation]})
+        singleTeamDF = pd.DataFrame({'A': teamName,
+                                    'B': [seasonMatchInformation],
+                                    'C': [seasonStatInformation]})
 
-print(singleTeamDF)
+        return singleTeamDF
