@@ -9,6 +9,8 @@ response = get(url)
 html_soup = BeautifulSoup(response.text, 'html.parser')
 team_container = html_soup.find('div', id = 'contentarea')
 
+#------------Schedule and Results Information--------------------
+
 scheduleTable = team_container.find_all('td', width = "50%")[0]
 date = []
 opponent = []
@@ -28,14 +30,27 @@ for match in matchInformation:
         result.append(match.find('a').text)
         counter = 0
 
-'''
-print("Date: " + str(len(date)))
-print(date)
-print("\n Opponent: " + str(len(opponent)))
-print(opponent)
-print("\n Result: " + str(len(result)))
-print(result)
-'''
+#------------Team Statistical Information--------------------
 
-#Still need to find stats
 statsTable = team_container.find_all('td', width = "50%")[1]
+
+categories = statsTable.find_all('a')
+statType = []
+
+for category in categories:
+    statType.append(category.text)
+
+#Last element is "view complete ranking summary" which can be deleted
+statType = statType[:-1]
+
+statInformation = statsTable.find_all('td', align = "right")
+ranking = []
+value = []
+statCounter = 0
+
+for stat in statInformation:
+    if (statCounter%2 == 0):
+        ranking.append(stat.text)
+    else:
+        value.append(float(stat.text))
+    statCounter += 1
