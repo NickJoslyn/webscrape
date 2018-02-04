@@ -1,10 +1,11 @@
-## Use list of schools/urls from Step 1 to grab statistics
+## Step 2: Grab schedule/results and season stats
 import pandas as pd
 from requests import get
 from bs4 import BeautifulSoup
 
 def grabStats(url):
 
+    # If url wasn't found in Step 1, return empty row for df
     if (url == "N/A"):
         print("No URL available")
         return pd.DataFrame({'A': [], 'B': [], 'C': []})
@@ -22,6 +23,9 @@ def grabStats(url):
             print("Couldn't find team name")
             teamName = "N/A"
         #------------Schedule and Results Information--------------------
+        # Find schedule/results table in html_soup
+        # Date of competition, opponent, and result in relevant array
+        # Merge individual arrays into one for use in df
 
         try:
             scheduleTable = team_container.find_all('td', width = "50%")[0]
@@ -68,6 +72,9 @@ def grabStats(url):
         seasonMatchInformation = [date, opponent, result]
 
         #------------Team Statistical Information--------------------
+        # Find season statistics table in html_soup
+        # Category, national ranking, and actual stat in relvevant array
+        # Merge into one array for df
 
         try:
             statsTable = team_container.find_all('td', width = "50%")[1]
@@ -84,6 +91,7 @@ def grabStats(url):
             except:
                 print("Couldn't find stat category")
                 statType.append("N/A")
+                
         #Last element is "view complete ranking summary" which can be deleted
         statType = statType[:-1]
 
